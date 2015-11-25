@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 var browserify = require('browserify');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
@@ -51,9 +51,9 @@ gulp.task('build-browser', function () {
   var browserOutput = 'lib/browser';
   // Our app bundler
   var appBundler = browserify({
-    entries: ['src/neo4j.js'],
+    entries: ['src/neo4j-api-v1.js'],
     cache: {},
-    standalone: 'neo4j',
+    standalone: 'neo4j-api-v1',
     packageCache: {}
   }).transform(babelify.configure({
     ignore: /external/
@@ -62,12 +62,12 @@ gulp.task('build-browser', function () {
   // Un-minified browser package
   appBundler
     .on('error', gutil.log)
-    .pipe(source('neo4j-web.js'))
+    .pipe(source('neo4j-api-v1-web.js'))
     .pipe(gulp.dest(browserOutput));
 
   return appBundler
     .on('error', gutil.log)
-    .pipe(source('neo4j-web.min.js'))
+    .pipe(source('neo4j-api-v1-web.min.js'))
     .pipe(buffer())
     .pipe(uglify())
     .pipe(gulp.dest(browserOutput));
@@ -86,10 +86,10 @@ gulp.task('build-browser-test', function(){
       cb();
     }))
     .pipe( through.obj( function( testFiles, enc, cb) {
-      browserify({ 
+      browserify({
           entries: testFiles,
           cache: {},
-          debug: true 
+          debug: true
         }).transform(babelify.configure({
           ignore: /external/
         }))
@@ -97,7 +97,7 @@ gulp.task('build-browser-test', function(){
           cb();
         })
         .on('error', gutil.log)
-        .pipe(source('neo4j-web.test.js'))
+        .pipe(source('neo4j-api-v1-web.test.js'))
         .pipe(gulp.dest(browserOutput))
     },
     function(cb) {
@@ -156,7 +156,7 @@ gulp.task('test-browser', function (cb) {
 });
 
 gulp.task('run-browser-test', function(){
-  return gulp.src('lib/browser/neo4j-web.test.js')
+  return gulp.src('lib/browser/neo4j-api-v1-web.test.js')
     .pipe(jasmineBrowser.specRunner({console: true}))
     .pipe(jasmineBrowser.headless())
 });

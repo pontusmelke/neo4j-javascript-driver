@@ -93,7 +93,7 @@
         padding: 0 2px;
     }
     </style>
-    <script src="../lib/browser/neo4j-web.min.js"></script>
+    <script src="../lib/browser/neo4j-api-v1-web.min.js"></script>
   </head>
   <body>
 
@@ -124,10 +124,10 @@
             <div id="results"></div>
 
           </td>
-        
+
         </tr>
       </table>
-    
+
     </div>
 
     <script>
@@ -150,10 +150,10 @@
                 }
                 table.appendChild(tr);
             }, onCompleted: function(metadata) {
-                
+
             }
         });
-        
+
         var results = document.getElementById("results");
         while(results.childElementCount > 0) {
             results.removeChild(results.children[0]);
@@ -161,13 +161,13 @@
         results.appendChild(table);
 
     }
-    
+
     function addParameter(key, value) {
         var row = document.getElementById("addParameter").parentNode.parentNode;
-        
+
         if (!key) key = document.getElementById("key").value;
         if (!value) value = document.getElementById("value").value;
-        
+
         if (key.length > 0) {
             var tbody = document.getElementById("parameters").getElementsByTagName("tbody")[0];
             var tr = document.createElement("tr");
@@ -193,15 +193,15 @@
 
             document.getElementById("key").value = "";
             document.getElementById("value").value = "";
-            
+
             tbody.insertBefore(tr, row);
         }
     }
-    
+
     function removeParameter(row) {
         row.parentNode.removeChild(row);
     }
-    
+
     function getParameters() {
         var map = {},
             parameters = document.getElementById("parameters").getElementsByClassName("parameter");
@@ -217,7 +217,7 @@
         }
         return map;
     }
-    
+
     document.getElementById("addParameter").onclick = function(event) {
         addParameter();
     };

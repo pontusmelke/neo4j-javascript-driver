@@ -21,7 +21,7 @@ import Session from './session';
 import {connect} from "./internal/connector";
 
 /**
-  * A Driver instance is used for mananging {@link Session}s.
+  * A Driver instance is used for managing {@link Session}s.
   * @access public
   */
 class Driver {
@@ -49,7 +49,7 @@ class Driver {
     let _driver = this;
     let _session = new Session( conn, () => {
       // On close of session, remove it from the list of open sessions
-      delete _driver._openSessions[sessionId]; 
+      delete _driver._openSessions[sessionId];
     });
 
     this._openSessions[sessionId] = _session;
