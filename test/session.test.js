@@ -189,6 +189,34 @@ describe('session', function() {
     });
   });
 
+  it('should be able to begin transaction ', function(done) {
+    // Given
+    var driver = neo4j.driver("bolt://localhost");
+    // When & Then(
+    var session = driver.session();
+    session.beginTransaction({
+      onCompleted: function (tx) {
+        tx.run( "RETURN 1.0 AS a").subscribe( {
+          onNext : function( record ) {
+            records.push( record );
+          },
+          onCompleted : function( ) {
+            expect( records.length ).toBe( 1 );
+            expect( records[0]['a'] ).toBe( 1 );
+            tx.close({
+              onCompleted: function (ignore) {
+                session.close((ignore) => {
+                    driver.close();
+                    done();
+                  }
+                )
+              }
+            });
+          }
+      })
+    }});
+  });
+
   it('should expose cypher notifications ', function(done) {
     // Given
     var driver = neo4j.driver("bolt://localhost");

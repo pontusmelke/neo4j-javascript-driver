@@ -19,24 +19,22 @@
 
 import StreamObserver from './internal/stream-observer';
 import {Result} from './result';
-import Transaction from './transaction';
 
 /**
-  * A Session instance is used for handling the connection and
-  * sending statements through the connection.
-  * @access public
-  */
+ * A Session instance is used for handling the connection and
+ * sending statements through the connection.
+ * @access public
+ */
 
-class Session {
+class Transaction {
   /**
    * @constructor
    * @param {Connection} conn - A connection to use
    * @param {function()} onClose - Function to be called on connection close
    */
-  constructor( conn, onClose ) {
+  constructor(conn, onClose) {
     this._conn = conn;
     this._sessionCb = onClose;
-    this._hasTx = false;
   }
 
   /**
@@ -48,22 +46,15 @@ class Session {
    * @return {Result} - New Result
    */
   run(statement, parameters) {
-    if(typeof statement === 'object' && statement.text) {
+    if (typeof statement === 'object' && statement.text) {
       parameters = statement.parameters || {};
       statement = statement.text;
     }
     let streamObserver = new StreamObserver();
-    this._conn.run( statement, parameters || {}, streamObserver );
-    this._conn.pullAll( streamObserver );
+    this._conn.run(statement, parameters || {}, streamObserver);
+    this._conn.pullAll(streamObserver);
     this._conn.sync();
-    return new Result( streamObserver, statement, parameters );
-  }
-
-  beginTransaction(subscriber) {
-    let observer = new TransactionObserver(subscriber, this._conn, function() { this._hasTx = false; } );
-    this._conn.run( "BEGIN", {}, observer);
-    this._conn.pullAll( observer );
-    this._conn.sync();
+    return new Result(streamObserver, statement, parameters);
   }
 
   /**
@@ -72,29 +63,53 @@ class Session {
    * @return
    */
   close(cb) {
-    this._sessionCb();
-    this._conn.close(cb);
+    let observer = new TxCloseObserver(cb, this._sessionCb);
+    this._conn.run("COMMIT", {}, observer);
+    this._conn.pullAll(observer);
+    this._conn.sync();
   }
 }
 
-class TransactionObserver {
 
-  constructor( subscriber, conn, onClose ) {
-    this._subscriber = subscriber;
-    this._conn = conn;
-    this._sessionCb = onClose;
+class TxCloseObserver {
+  constructor( userCb, sessionCb ) {
+    this._userCb = userCb
+    this._sessionCb = sessionCb;
   }
 
-  onNext( record ) {}
+  onNext( ignore ) {}
 
-  onCompleted( ignore ) {
-    let tx = new Transaction( this._conn, this._sessionCb);
-    this._subscriber.onCompleted( tx );
+  onCompleted( meta ) {
+    this._sessionCb();
+    this._userCb.onCompleted( meta );
   }
 
   onError( error ) {
-    this._subscriber.onError( error );
+    this._sessionCb();
+    this._userCb.onError( error );
   }
 }
 
-export default Session;
+export default Transaction;
+
+
+/*
+
+ session.beginTransaction(cb1)
+
+ conn.run("BEGIN")
+ ...somehow wait for outcome..
+ ...instantitate tx
+ ...call cb
+
+ cb1(transaction)
+
+ tx.run = session.run
+
+ tx.abort
+ conn.run("ABORT")
+
+ tx.close
+ conn.run("COMMIT")
+ .... call cb2
+ */
